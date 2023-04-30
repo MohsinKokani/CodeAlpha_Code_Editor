@@ -1,0 +1,131 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds/src/ace.js"></script>
+    <title>editor</title>
+</head>
+
+<body>
+    <nav>
+        <div class="dropdown">
+            <span>Select Language ▼</span>
+            <div class="dropdown-content">
+                <p onclick="setCurrentLanguage(4)">Java</p>
+                <p onclick="setCurrentLanguage(5)">Python</p>
+                <p onclick="setCurrentLanguage(6)">C</p>
+                <p onclick="setCurrentLanguage(7)">C++</p>
+                <p onclick="setCurrentLanguage(8)">PHP</p>
+                <p onclick="setCurrentLanguage(17)">JavaScript</p>
+            </div>
+        </div>
+        <button id="runButton" type="button" onclick="runit()">Run ► </button>
+    </nav>
+    <div class="singleRow">
+        <div id="editor" style="height: 200px;"></div>
+        <pre id="output"></pre>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+
+        const outputArea = document.getElementById('output');
+
+        const editor = ace.edit("editor");
+        const session = editor.getSession();
+        session.setMode("ace/mode/python");
+        editor.setTheme("ace/theme/monokai");
+        editor.setValue("print('Hello Python!')");
+        editor.setOption("showPrintMargin", false);
+        editor.commands.addCommand({
+            name: "runCode",
+            bindKey: { win: "Ctrl-Enter", mac: "Command-Enter" },
+            exec: function (editor) {
+                document.getElementById("runButton").click();
+            }
+        });
+
+        let currentLanguage = 5;
+        const setCurrentLanguage = (n) => {
+            currentLanguage = n;
+            switch (n) {
+                case 4:
+                    programCode = "public class Progman {\n" +
+                        "    public static void main(String[] args) {\n" +
+                        "\t    System.out.println(\"Hello, Java!\");\n" +
+                        "    }\n" +
+                        "}";
+                    session.setMode("ace/mode/java");
+                    editor.setValue(programCode);
+                    break;
+                case 5:
+                    session.setMode("ace/mode/python");
+                    editor.setValue("print('hello Python')");
+                    break;
+                case 6:
+                    programCode = "#include <stdio.h>\n\nint main() {\n    printf(\"hello C\");\n    return 0;\n}";
+                    session.setMode("ace/mode/c_cpp");
+                    editor.setValue(programCode);
+                    break;
+                case 7:
+                    programCode = "#include<iostream>\nusing namespace std;\n\nint main() {\n    cout<<\"Hello C++\";\n    return 0;\n}";
+                    session.setMode("ace/mode/c_cpp");
+                    editor.setValue(programCode);
+                    break;
+                case 8:
+                    programCode = '<?php echo "Hello PHP"; ?>';
+                    session.setMode("ace/mode/php");
+                    editor.setValue(programCode);
+                    break;
+                case 17:
+                    programCode = "console.log('Hello JavaScript!')";
+                    session.setMode("ace/mode/javascript");
+                    editor.setValue(programCode);
+                    break;
+                default:
+                    textarea.value = "Something went wrong...";
+                    break;
+            }
+        }
+
+        function runit() {
+            const url = 'https://code-compiler.p.rapidapi.com/v2';
+            const options = {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/x-www-form-urlencoded',
+                    'X-RapidAPI-Key': config.api_key,
+                    'X-RapidAPI-Host': 'code-compiler.p.rapidapi.com'
+                },
+                body: new URLSearchParams({
+                    LanguageChoice: currentLanguage,
+                    Program: editor.getValue()
+                })
+            };
+
+            try {
+                outputArea.innerText = 'Executing...';
+                fetch(url, options)
+                    .then((response) => response.text())
+                    .then((data) => {
+                        data = JSON.parse(data);
+                        console.log(data);
+                        if (data.Errors) {
+                            outputArea.innerHTML = data.Errors;
+                            return;
+                        }
+                        outputArea.innerHTML = data.Result;
+                    });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+    </script>
+</body>
+<!DOCTYPE html>
